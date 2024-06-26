@@ -1,9 +1,27 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:e_learn/utils/theme/colors.dart';
 import 'package:e_learn/utils/theme/fonts.dart';
 import 'package:flutter/material.dart';
 
 class CoursesCard extends StatelessWidget {
-  const CoursesCard({super.key});
+  final String imageUrl;
+  final String title;
+  final String description;
+  final String price;
+  final String offerPrice;
+  final String rating;
+  final String studentsCount;
+
+  const CoursesCard({
+    super.key,
+    required this.imageUrl,
+    required this.title,
+    required this.description,
+    required this.price,
+    required this.offerPrice,
+    required this.rating,
+    required this.studentsCount,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -34,9 +52,9 @@ class CoursesCard extends StatelessWidget {
                     topLeft: Radius.circular(15),
                     bottomLeft: Radius.circular(15),
                   ),
-                  child: Image.asset(
-                    'assets/images/course_img.jpeg',
-                    fit: BoxFit.cover,
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.fill,
                   ),
                 ),
               )
@@ -47,74 +65,86 @@ class CoursesCard extends StatelessWidget {
       ),
     );
   }
-}
 
-Widget cardDetailsWidget() {
-  return Padding(
-    padding: const EdgeInsets.only(left: 10),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Graphic Design',
-              style: headingFontStyle.copyWith(
-                  color: fontTitleColor, fontSize: 12),
+  Widget cardDetailsWidget() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SizedBox(
+                width: 200,
+                child: AutoSizeText(
+                  minFontSize: 16,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  title,
+                  style: headingFontStyle.copyWith(
+                      color: fontTitleColor, fontSize: 12),
+                ),
+              ),
+              IconButton(
+                onPressed: () {},
+                icon: Image.asset('assets/icons/save_ic.png'),
+              )
+            ],
+          ),
+          SizedBox(
+            width: 210,
+            child: AutoSizeText(
+              minFontSize: 14,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              description,
+              style: headingFontStyle.copyWith(fontSize: 14),
             ),
-            IconButton(
-              onPressed: () {},
-              icon: Image.asset('assets/icons/save_ic.png'),
-            )
-          ],
-        ),
-        Text(
-          'Graphic Design Advanced',
-          style: headingFontStyle.copyWith(fontSize: 16),
-        ),
-        const SizedBox(height: 5),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              '₹28',
-              style: headingTagFontStyle.copyWith(
-                  fontSize: 17, color: primaryColor),
-            ),
-            const SizedBox(width: 5),
-            Text(
-              '₹61',
-              style: headingFontStyle.copyWith(
-                  decoration: TextDecoration.lineThrough,
-                  fontSize: 13,
-                  color: fontSecondaryColor),
-            )
-          ],
-        ),
-        const SizedBox(height: 5),
-        Row(
-          children: [
-            const Icon(Icons.star, color: Colors.yellow, size: 20),
-            const SizedBox(width: 5),
-            Text(
-              '3.9',
-              style: headingFontStyle.copyWith(fontSize: 13),
-            ),
-            const SizedBox(width: 20),
-            Container(
-              height: 15,
-              width: 2,
-              color: Colors.black,
-            ),
-            const SizedBox(width: 20),
-            Text(
-              '12680 Std',
-              style: headingFontStyle.copyWith(fontSize: 13),
-            ),
-          ],
-        )
-      ],
-    ),
-  );
+          ),
+          const SizedBox(height: 5),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '₹$price',
+                style: headingTagFontStyle.copyWith(
+                    fontSize: 17, color: primaryColor),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                '₹$offerPrice',
+                style: headingFontStyle.copyWith(
+                    decoration: TextDecoration.lineThrough,
+                    fontSize: 13,
+                    color: fontSecondaryColor),
+              )
+            ],
+          ),
+          const SizedBox(height: 5),
+          Row(
+            children: [
+              const Icon(Icons.star, color: yellowColor, size: 20),
+              const SizedBox(width: 5),
+              Text(
+                rating,
+                style: headingFontStyle.copyWith(fontSize: 13),
+              ),
+              const SizedBox(width: 20),
+              Container(
+                height: 15,
+                width: 2,
+                color: Colors.black,
+              ),
+              const SizedBox(width: 20),
+              Text(
+                '$studentsCount Std',
+                style: headingFontStyle.copyWith(fontSize: 13),
+              ),
+            ],
+          )
+        ],
+      ),
+    );
+  }
 }
