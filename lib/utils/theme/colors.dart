@@ -5,6 +5,7 @@ const Color secondaryColor = Color(0xFFD5E2F5);
 const Color backgroundColor = Color(0xFFF5F9FF);
 const Color componentsColor = Color(0xFF167F71);
 const Color overlayColor = Color(0xFFFFFFFF);
+const Color yellowColor = Color(0xFFFF9C07);
 Color boxShadowColor = Colors.grey.withOpacity(0.2);
 const Color cardBackground = Color(0xFFE8F1FF);
 const Color checkboxBackgroundColor = Color(0xFFB4BDC4);

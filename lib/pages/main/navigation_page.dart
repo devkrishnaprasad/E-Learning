@@ -1,11 +1,14 @@
 import 'package:e_learn/pages/main/controller/navigation_controller.dart';
+import 'package:e_learn/services/helper/controller/helper_controller.dart';
 import 'package:e_learn/utils/theme/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 
+// ignore: must_be_immutable
 class NavigationPage extends StatelessWidget {
   NavigationPage({super.key});
+  HelperController helperController = Get.find();
   final NavigationController navigationController =
       Get.put(NavigationController());
 
