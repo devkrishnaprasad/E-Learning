@@ -1,5 +1,7 @@
 import 'dart:developer';
 import 'package:chewie/chewie.dart';
+import 'package:e_learn/pages/my_courses/controller/my_course_controller.dart';
+import 'package:e_learn/pages/my_courses/model/purchase_model.dart';
 import 'package:e_learn/services/helper/controller/api/helper_api.dart';
 import 'package:e_learn/services/helper/local_storage/local_storage.dart';
 import 'package:e_learn/services/helper/model/helper_models.dart';
@@ -15,10 +17,15 @@ class HelperController extends GetxController {
   var allCourseCategooryList = <CategoryListRecord>[].obs;
   var allBannerList = <BannerListRecord>[].obs;
   var userDetails = <UserDetailsRecord>[].obs;
+  var purchaseDetails = <PurchaseRecord>[].obs;
+  RxString currentSessionVideoUrl = ''.obs;
+  RxBool isVideoLoading = false.obs;
   RxBool isLoading = false.obs;
   RxString userFullName = ''.obs;
   var playerWidget = Rxn<Chewie>();
+  bool hasCalledApi = false;
 
+  VideoPlayerController? videoPlayerController;
   initialSetup() async {
     var data = await localStorage.readUserToken();
     // ignore: unnecessary_null_comparison
@@ -99,22 +106,77 @@ class HelperController extends GetxController {
     }
   }
 
-  videoPlayer(videoUrl) async {
+  void videoPlayer(String videoUrl, bool isDetailsOnly) async {
     try {
-      final videoPlayerController =
-          VideoPlayerController.networkUrl(Uri.parse(videoUrl));
+      isVideoLoading.value = true;
 
-      await videoPlayerController.initialize();
+      // Dispose the old controller if it exists
+      if (videoPlayerController != null) {
+        videoPlayerController!.removeListener(_videoListener);
+        await videoPlayerController!.dispose();
+      }
+
+      // Create and initialize the new controller
+      videoPlayerController =
+          VideoPlayerController.networkUrl(Uri.parse(videoUrl));
+      await videoPlayerController!.initialize();
+
       final chewieController = ChewieController(
-        videoPlayerController: videoPlayerController,
+        videoPlayerController: videoPlayerController!,
       );
 
       playerWidget.value = Chewie(
         controller: chewieController,
       );
+      isVideoLoading.value = false;
+
+      hasCalledApi = false;
+      if (!isDetailsOnly) {
+        videoPlayerController!.addListener(_videoListener);
+      }
     } catch (e) {
       log("Failed to load video $e");
+      isVideoLoading.value = false;
     }
+  }
+
+  void _videoListener() async {
+    MyCourseController myCourseController = Get.find();
+    if (videoPlayerController!.value.isInitialized) {
+      final duration = videoPlayerController!.value.duration;
+      final position = videoPlayerController!.value.position;
+      var status = myCourseController.checkSessionIsCompleted();
+      if (status) {
+      } else {
+        if (position.inSeconds >= (0.9 * duration.inSeconds).round() &&
+            !hasCalledApi) {
+          hasCalledApi = true;
+          await myCourseController.markLevelCompleted();
+
+          await myCourseController.getLevelRecord(myCourseController
+              .coursesController.courseDetails[0].productDetails.productId);
+
+          await myCourseController.getSessionRecord(myCourseController
+              .coursesController.courseDetails[0].productDetails.productId);
+        }
+        myCourseController.checkSessionIsCompleted();
+      }
+
+      if (videoPlayerController!.value.isPlaying &&
+          position.inSeconds == duration.inSeconds) {
+        await callAnotherFunctionWhenCompleted();
+      }
+    }
+  }
+
+  Future<void> callApiWhenNinetyPercentPlayed() async {
+    // Your API call logic
+    log("90% of the video has been played. Calling the API...");
+  }
+
+  Future<void> callAnotherFunctionWhenCompleted() async {
+    // Logic to execute when the video is fully completed
+    log("Video playback completed. Calling another function...");
   }
 
   userSigin(email, password) async {
@@ -146,6 +208,22 @@ class HelperController extends GetxController {
       helperApiService.signUp(payload);
     } catch (e) {
       log("login error $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  getPurchaseDetails() async {
+    isLoading.value = true;
+    try {
+      var response = await helperApiService.getPurchaseDetails();
+      if (response.isNotEmpty) {
+        purchaseDetails.assignAll(response);
+      } else {
+        purchaseDetails.assignAll([]);
+      }
+    } catch (e) {
+      log("Error while getPurchaseDetails list $e");
     } finally {
       isLoading.value = false;
     }

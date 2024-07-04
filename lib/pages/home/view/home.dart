@@ -1,7 +1,6 @@
-import 'dart:developer';
-
 import 'package:e_learn/pages/category/category.dart';
 import 'package:e_learn/pages/courses/controller/courses_controller.dart';
+import 'package:e_learn/pages/courses/view/all_courses.dart';
 import 'package:e_learn/pages/courses/view/course_details/course_details.dart';
 import 'package:e_learn/pages/courses/view/popular_courses.dart';
 import 'package:e_learn/pages/filter/filters.dart';
@@ -21,13 +20,18 @@ class HomePage extends StatelessWidget {
   CoursesController coursesController = Get.put(CoursesController());
   HelperController helperController = Get.find();
   RxString selectedCategoryId = ''.obs;
+  RxInt currentIndex = 0.obs;
+  RxList courseList = [].obs;
+
   @override
   Widget build(BuildContext context) {
+    courseList.value = helperController.allPopularCoursesList;
     return Scaffold(
       body: SafeArea(
         child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Obx(() {
+          padding: const EdgeInsets.all(20.0),
+          child: Obx(
+            () {
               return SingleChildScrollView(
                 child: helperController.isLoading.value
                     ? const Center(
@@ -53,7 +57,9 @@ class HomePage extends StatelessWidget {
                         ],
                       ),
               );
-            })),
+            },
+          ),
+        ),
       ),
     );
   }
@@ -155,8 +161,7 @@ class HomePage extends StatelessWidget {
               itemBuilder: (context, index) {
                 return GestureDetector(
                   onTap: () {
-                    log("The category id ${helperController.allCourseCategooryList[index].categoryId}");
-                    // Get.to(const AllCourses());
+                    Get.to(AllCourses());
                   },
                   child: Container(
                     height: 30,
@@ -187,7 +192,6 @@ class HomePage extends StatelessWidget {
   }
 
   Widget poluparCourses() {
-    RxInt currentIndex = 0.obs;
     return Column(
       children: [
         Row(
@@ -219,51 +223,69 @@ class HomePage extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 10),
-        SizedBox(
-          height: 30,
-          child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () {
-                    currentIndex.value = index;
-                    log("Selected Category Id : ${helperController.allCourseCategooryList[index].categoryId}");
-                    selectedCategoryId.value = helperController
-                        .allCourseCategooryList[index].categoryId;
-                  },
-                  child: Obx(
-                    () {
-                      return Container(
-                        height: 30,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            color: currentIndex.value == index
-                                ? componentsColor
-                                : cardBackground),
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                              left: 20, right: 20, top: 5, bottom: 5),
-                          child: Center(
-                            child: Text(
-                                helperController
-                                    .allCourseCategooryList[index].categoryName,
-                                style: descriptionFontStyle.copyWith(
-                                    color: currentIndex.value == index
-                                        ? overlayColor
-                                        : Colors.black)),
-                          ),
-                        ),
-                      );
-                    },
+        categoryLsit(),
+      ],
+    );
+  }
+
+  Widget categoryLsit() {
+    return SizedBox(
+      height: 30,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: () {
+              if (index == 0) {
+                courseList.value = helperController.allPopularCoursesList;
+                currentIndex.value = index;
+              } else {
+                courseList.value = helperController.allPopularCoursesList
+                    .where((course) =>
+                        course.productCategory ==
+                        helperController
+                            .allCourseCategooryList[index - 1].categoryId)
+                    .toList();
+                currentIndex.value = index;
+              }
+            },
+            child: Obx(
+              () {
+                return Container(
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: currentIndex.value == index
+                        ? componentsColor
+                        : cardBackground,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                    child: Text(
+                      index == 0
+                          ? 'All'
+                          : helperController
+                              .allCourseCategooryList[index - 1].categoryName,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: currentIndex.value == index
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                    ),
                   ),
                 );
               },
-              separatorBuilder: (context, index) {
-                return const SizedBox(width: 20);
-              },
-              itemCount: helperController.allCourseCategooryList.length),
-        )
-      ],
+            ),
+          );
+        },
+        separatorBuilder: (context, index) {
+          return const SizedBox(width: 5);
+        },
+        itemCount: helperController.allCourseCategooryList.length +
+            1, // +1 for the "All" category
+      ),
     );
   }
 
@@ -273,12 +295,19 @@ class HomePage extends StatelessWidget {
       child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemBuilder: (context, index) {
-            var data = helperController.allPopularCoursesList[index];
+            var data = courseList[index];
+
             return GestureDetector(
               onTap: () {
+                bool status = helperController.purchaseDetails
+                    .where((product) => product.productId == data.productId)
+                    .isNotEmpty;
                 coursesController.getCourseDetails(data.productId);
                 coursesController.getProductReview(data.productId);
-                Get.to(CourseDetails());
+
+                Get.to(CourseDetails(
+                  isPurchased: status,
+                ));
               },
               child: CourseCard(
                 imageUrl: data.productImage,
@@ -293,7 +322,7 @@ class HomePage extends StatelessWidget {
           separatorBuilder: (context, index) {
             return const SizedBox(width: 20);
           },
-          itemCount: helperController.allPopularCoursesList.length),
+          itemCount: courseList.length),
     );
   }
 

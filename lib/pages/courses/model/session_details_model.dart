@@ -88,8 +88,10 @@ class ProductDetails {
   String offerPrice;
   String totalDuration;
   String sessionCount;
+  String productImage;
 
   ProductDetails({
+    required this.productImage,
     required this.about,
     required this.productId,
     required this.productName,
@@ -116,6 +118,7 @@ class ProductDetails {
         offerPrice: json['offer_price'],
         totalDuration: json['total_duration'],
         sessionCount: json['session_count'],
+        productImage: json['product_image'],
       );
 
   Map<String, dynamic> toJson() => {
@@ -128,6 +131,7 @@ class ProductDetails {
         "offer_price": offerPrice,
         "total_duration": totalDuration,
         "session_count": sessionCount,
+        "product_image": productImage
       };
 }
 

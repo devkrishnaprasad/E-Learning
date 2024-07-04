@@ -12,7 +12,6 @@ InputDecorationTheme textFiledDecoration = InputDecorationTheme(
 
 ElevatedButtonThemeData lightElevatedButtonTheme = ElevatedButtonThemeData(
   style: ElevatedButton.styleFrom(
-    elevation: 100.0,
     foregroundColor: Colors.white,
     backgroundColor: primaryColor,
     disabledBackgroundColor: Colors.grey,
@@ -40,8 +39,8 @@ CheckboxThemeData checkboxThemeData = CheckboxThemeData(
     return Colors.white;
   }),
   side: const BorderSide(
-    color: secondaryColor, // Border color
-    width: 2.0, // Border width
+    color: secondaryColor,
+    width: 2.0,
   ),
   shape: RoundedRectangleBorder(
     borderRadius: BorderRadius.circular(5.0),

@@ -126,7 +126,9 @@ class SignInPage extends StatelessWidget {
                       }, child: Obx(() {
                         return helperController.isLoading.value
                             ? const Center(
-                                child: CircularProgressIndicator(),
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
                               )
                             : Text(
                                 'Sign In',

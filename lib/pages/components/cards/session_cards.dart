@@ -1,22 +1,25 @@
 import 'dart:developer';
-
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:e_learn/main.dart';
+import 'package:e_learn/pages/my_courses/controller/my_course_controller.dart';
 import 'package:e_learn/utils/theme/colors.dart';
 import 'package:e_learn/utils/theme/fonts.dart';
 import 'package:e_learn/utils/warppers.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 // ignore: must_be_immutable
 class SessionCards extends StatelessWidget {
   final int indexCount;
   final dynamic listData;
+  bool isPurchased;
 
   SessionCards({
     super.key,
     required this.indexCount,
     required this.listData,
+    required this.isPurchased,
   });
-
   Warppers warppers = Warppers();
   @override
   Widget build(BuildContext context) {
@@ -92,6 +95,12 @@ class SessionCards extends StatelessWidget {
   }
 
   Widget levelWidget(levelIndex, listData, index) {
+    RxBool isComplected = false.obs;
+    if (isPurchased) {
+      MyCourseController myCourseController = Get.find();
+      isComplected.value = myCourseController.levelRecord
+          .any((record) => record.levelId == listData[levelIndex].levelId);
+    }
     return GestureDetector(
       onTap: () {
         log("The level ${listData[levelIndex].levelId}");
@@ -101,18 +110,34 @@ class SessionCards extends StatelessWidget {
         children: [
           Row(
             children: [
-              ClipOval(
-                child: Container(
-                  width: 50,
-                  height: 50,
-                  color: secondaryColor,
-                  child: Center(
-                    child: Text(
-                      "${levelIndex + 1}",
-                      style: headingFontStyle.copyWith(fontSize: 14),
+              Obx(
+                () {
+                  return Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isPurchased
+                          ? isComplected.value
+                              ? Colors.green
+                              : secondaryColor
+                          : secondaryColor,
                     ),
-                  ),
-                ),
+                    child: Center(
+                      child: Text(
+                        "${levelIndex + 1}",
+                        style: headingFontStyle.copyWith(
+                          fontSize: 14,
+                          color: isPurchased
+                              ? isComplected.value
+                                  ? Colors.white
+                                  : Colors.black
+                              : Colors.black,
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
               const SizedBox(width: 10),
               Column(
@@ -139,10 +164,20 @@ class SessionCards extends StatelessWidget {
             ],
           ),
           IconButton(
-            onPressed: () {},
-            icon: index == 0
+            onPressed: () {
+              // MyCourseController myCourseController = Get.find();
+              // myCourseController.currentLevelId.value =
+              //     listData[levelIndex].levelId;
+              // myCourseController.currentSessionId.value =
+              //     myCourseController.sessionRecord[index].sessionId;
+              helperController.currentSessionVideoUrl.value =
+                  listData[levelIndex].videoPath;
+            },
+            icon: isPurchased
                 ? Image.asset('assets/icons/play_ic.png')
-                : Image.asset('assets/icons/lock_ic.png'),
+                : index == 0
+                    ? Image.asset('assets/icons/play_ic.png')
+                    : Image.asset('assets/icons/lock_ic.png'),
           )
         ],
       ),

@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:e_learn/pages/main/navigation_page.dart';
+import 'package:e_learn/pages/my_courses/model/purchase_model.dart';
 import 'package:e_learn/pages/signin_sigin_up/signin_page.dart';
 import 'package:e_learn/services/api/api_provider.dart';
 import 'package:e_learn/services/api/constants.dart';
@@ -115,6 +116,26 @@ class HelperApiService {
       }
     } catch (e) {
       log("Error to login : $e");
+      SnackbarHelper.showSnackbar(
+          type: 'Error', message: 'email or password worng');
+      return [];
+    }
+    return [];
+  }
+
+  Future<List<PurchaseRecord>> getPurchaseDetails() async {
+    List<PurchaseRecord> purchaseList = [];
+    try {
+      var response = await apiProvider.getSecure(getPurchaseDetailsEndpoint);
+      purchaseList = response
+          .map<PurchaseRecord>((p) => PurchaseRecord.fromJson(p))
+          .toList();
+
+      if (response.isNotEmpty) {
+        return purchaseList;
+      }
+    } catch (e) {
+      log("Error while getPurchaseDetails : $e");
       return [];
     }
     return [];

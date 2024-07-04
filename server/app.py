@@ -12,7 +12,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = os.environ["TOKEN_SECRET_KEY"]
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta()  
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=30)  
 jwt = JWTManager(app)
 CORS(app)
 
@@ -121,7 +121,7 @@ def user_login():
         return jsonify({"error": "Password is required"}), 400
 
     response = operations_obj.login_user(email=email, password=password)
-    
+    print(response)
     if 'error' in response:
         return jsonify(response), 401
 
@@ -133,7 +133,6 @@ def user_login():
     records = response_data.get('records', [])
     if records:
         records[0]['user_token'] = user_token
-
     return jsonify(response)
 
 @app.route('/apis/users/get-profile/', methods=['GET'])
@@ -141,7 +140,7 @@ def get_profile():
     auth_header = request.headers.get('Authorization')
     if auth_header:
         token = auth_header.split(" ")[1]
-        print(token)
+        
         response =  validate_token(token)
         if response['status'] == True:
             response['details']['email']
@@ -151,7 +150,7 @@ def get_profile():
     else:
         return jsonify({"message": "Authorization header missing"}), 401
     
-@app.route('/apis/create-category/', methods=['POST'])
+@app.route('/apis/category/create-category/', methods=['POST'])
 def add_category():
     category_name = request.form['category_name']
     username = request.form['username']
@@ -161,12 +160,12 @@ def add_category():
     response = operations_obj.add_category(category_id=generate_uuid(),category_name=category_name,username=username,status=status,category_image=image_url)
     return response
 
-@app.route('/apis/get-category-list/', methods=['GET'])
+@app.route('/apis/category/get-category-list/', methods=['GET'])
 def get_all_category():
     response = operations_obj.get_all_category()
     return response
 
-@app.route('/apis/create-product/', methods=['POST'])
+@app.route('/apis/product/create-product/', methods=['POST'])
 def create_product():
     product_image = request.files['product_image']
     product_name = request.form['product_name']
@@ -190,12 +189,12 @@ def create_product():
     session_count=session_count,about=about,username=username,status=status)
     return response
 
-@app.route('/apis/get-products-all/', methods=['GET'])
+@app.route('/apis/product/get-products-all/', methods=['GET'])
 def get_all_products():
     response = operations_obj.get_all_products()
     return response
 
-@app.route('/apis/add-popuplar-product/', methods=['POST'])
+@app.route('/apis/product/add-popuplar-product/', methods=['POST'])
 def add_popular_products():
     data = request.get_json()
     product_id = data.get('product_id')
@@ -203,12 +202,12 @@ def add_popular_products():
     response = operations_obj.add_popular_product(item_id=generate_uuid(),product_id=product_id,username=username)
     return response
 
-@app.route('/apis/get-popular-products/', methods=['GET'])
+@app.route('/apis/product/get-popular-products/', methods=['GET'])
 def get_popular_products():
     response = operations_obj.get_all_popular_product_details()
     return response
 
-@app.route('/apis/add-offer-banner/', methods=['POST'])
+@app.route('/apis/banner/add-offer-banner/', methods=['POST'])
 def add_banner():
     title = request.form['title']
     description = request.form['description']
@@ -220,47 +219,65 @@ def add_banner():
     response = operations_obj.add_banners(title=title,description=description,price=offer_price,status=status,username=username,image_url=image_url,banner_id=generate_uuid())
     return response
 
-@app.route('/apis/get-banners/', methods=['GET'])
+@app.route('/apis/banner/get-banners/', methods=['GET'])
 def get_banners():
     response = operations_obj.get_all_banners()
     return response
 
-@app.route('/apis/create-session/', methods=['POST'])
+@app.route('/apis/session/create-session/', methods=['POST'])
 def add_sessions():
-    data = request.get_json()
-    product_id =  data.get('product_id')
-    session_title =  data.get('session_title')
-    session_duration =  data.get('session_duration')
-    last_modified_user =  data.get('last_modified_user')
-    status = data.get('status')
-    response =  operations_obj.create_session(product_id=product_id,session_id=generate_uuid(),
-                                  title=session_title,duration=session_duration,
-                                  status=status,username=last_modified_user)
-    return response
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        token = auth_header.split(" ")[1]
+        
+        response =  validate_token(token)
+        if response['status'] == True:
+            
+            print(response['details']['email'])
+            data = request.get_json()
+            product_id =  data.get('product_id')
+            session_title =  data.get('session_title')
+            session_duration =  data.get('session_duration')
+            username = response['details']['email']
+            status = data.get('status')
+            return  operations_obj.create_session(product_id=product_id,session_id=generate_uuid(),
+                                        title=session_title,duration=session_duration,
+                                        status=status,username=username)
+        return response, 200
+    else:
+        return jsonify({"message": "Authorization header missing"}), 401
 
-@app.route('/apis/get-session-details/', methods=['POST'])
+@app.route('/apis/session/get-session-details/', methods=['POST'])
 def get_session_details():
     data = request.get_json()
     product_id =  data.get('product_id')
     return operations_obj.get_sessions_details(product_id=product_id)
 
-@app.route('/apis/create-level/', methods=['POST'])
+@app.route('/apis/session/create-level/', methods=['POST'])
 def add_level():
-    session_id = request.form['session_id']
-    video = request.files['video_url']
-    resourses = request.files['resourses']
-    level_title = request.form['level_title']
-    duration = request.form['duration']
-    last_modified_user = request.form['last_modified_user']
-    product_id = request.form['product_id']
-    video_url =  upload_image_s3(video,f'{product_id}/{session_id}')
-    resourses_url = upload_image_s3(resourses,f'{product_id}/{session_id}')
 
-    response= operations_obj.create_session_level(level_id=generate_uuid(),session_id=session_id,video_path=video_url,resourses=resourses_url,
-                                levle_title=level_title,duration=duration,last_modified_user=last_modified_user)
-    return response
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        token = auth_header.split(" ")[1]
+        
+        response =  validate_token(token)
+        if response['status'] == True:
+            
+            print(response['details']['email'])
+            session_id = request.form['session_id']
+            video = request.files['video_url']
+            resourses = request.files['resourses']
+            level_title = request.form['level_title']
+            duration = request.form['duration']
+            username = response['details']['email']
+            product_id = request.form['product_id']
+            video_url =  upload_image_s3(video,f'{product_id}/{session_id}')
+            resourses_url = upload_image_s3(resourses,f'{product_id}/{session_id}')
 
-@app.route('/apis/add-product-review/', methods=['POST'])
+            return operations_obj.create_session_level(level_id=generate_uuid(),session_id=session_id,video_path=video_url,resourses=resourses_url,
+                                        levle_title=level_title,duration=duration,last_modified_user=username)
+
+@app.route('/apis/review/add-product-review/', methods=['POST'])
 def add_product_review():
     data = request.get_json()
     product_id =  data.get('product_id')
@@ -270,28 +287,35 @@ def add_product_review():
     return  operations_obj.add_product_review(review_id=generate_uuid(),product_id=product_id,rating=rating,
                                               review=review,username=username)
 
-@app.route('/apis/get-product-review/', methods=['POST'])
+@app.route('/apis/review/get-product-review/', methods=['POST'])
 def get_product_review():
     data = request.get_json()
     product_id =  data.get('product_id')
     return  operations_obj.get_product_reviews(product_id=product_id)
 
-@app.route('/apis/purchase-product/', methods=['POST'])
+@app.route('/apis/product/purchase-product/', methods=['POST'])
 def purchase_product():
+    auth_header = request.headers.get('Authorization')
     data = request.get_json()
     product_id =  data.get('product_id')
     price =  data.get('price')
-    username =  data.get('username')
-    payment_mode = data.get('payment_method')
-    return operations_obj.product_purchase(product_id=product_id,price=price,username=username,
-                                           payment_mode=payment_mode,purchase_id=generate_uuid())
+    if auth_header:
+        token = auth_header.split(" ")[1]
+        
+        response =  validate_token(token)
+        if response['status'] == True:
+            username = response['details']['email']
+            print(response['details']['email'])
+            payment_mode = data.get('payment_method')
+            return operations_obj.product_purchase(product_id=product_id,price=price,username=username,
+                                                payment_mode=payment_mode,purchase_id=generate_uuid())
 
-@app.route('/apis/get-purchase-details/', methods=['GET'])
+@app.route('/apis/product/get-purchase-details/', methods=['GET'])
 def get_purchase_details():
     auth_header = request.headers.get('Authorization')
     if auth_header:
         token = auth_header.split(" ")[1]
-        print(token)
+        
         response =  validate_token(token)
         if response['status'] == True:
             response['details']['email']
@@ -300,6 +324,74 @@ def get_purchase_details():
         return response, 200
     else:
         return jsonify({"message": "Authorization header missing"}), 401
-    
+
+@app.route('/apis/session/mark-session-completed/', methods=['POST'])
+def mark_session_completed():
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        token = auth_header.split(" ")[1]
+        
+        response =  validate_token(token)
+        if response['status'] == True:
+            response['details']['email']
+            data = request.get_json()
+            product_id =  data.get('product_id')
+            session_id = data.get('session_id')
+            return operations_obj.mark_session_completed(
+                session_id=session_id,product_id=product_id,
+                username=response['details']['email'])
+        return response, 200
+    else:
+        return jsonify({"message": "Authorization header missing"}), 401
+
+@app.route('/apis/session/mark-level-completed/', methods=['POST'])
+def mark_level_completed():
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        token = auth_header.split(" ")[1]
+        
+        response =  validate_token(token)
+        if response['status'] == True:
+            response['details']['email']
+            data = request.get_json()
+            product_id =  data.get('product_id')
+            session_id = data.get('session_id')
+            level_id = data.get('level_id')
+            return operations_obj.mark_level_completed(
+                level_id=level_id,
+                session_id=session_id,product_id=product_id,
+                username=response['details']['email'])
+        return response, 200
+    else:
+        return jsonify({"message": "Authorization header missing"}), 401
+
+@app.route('/apis/session/get-level-record/', methods=['POST'])
+def get_level_record():
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        token = auth_header.split(" ")[1]
+        
+        response =  validate_token(token)
+        if response['status'] == True:
+            response['details']['email']
+            data = request.get_json()
+            product_id =  data.get('product_id')
+
+            return operations_obj.get_level_record(username=response['details']['email'],product_id=product_id)
+
+@app.route('/apis/session/get-session-record/', methods=['POST'])
+def get_session_record():
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        token = auth_header.split(" ")[1]
+        
+        response =  validate_token(token)
+        if response['status'] == True:
+            response['details']['email']
+            data = request.get_json()
+            product_id =  data.get('product_id')
+            return operations_obj.get_session_record(username=response['details']['email'],product_id=product_id)
+        
+
 if __name__ == '__main__':
     app.run(debug=True, port=4000)

@@ -298,7 +298,7 @@ class DBOperations:
                 cur.close()
                 db_connect.close()
 
-                return jsonify({"message": "New session added successfully."}), 200
+                return jsonify({"message": "New session added successfully.","session_id":session_id}), 200
         except Exception as e:
             print(f"Error create_session: {e}")
             return jsonify({"message": "Failed to add session."}), 500
@@ -316,6 +316,7 @@ class DBOperations:
                     pd.price,
                     pd.offer_price,
                     pd.session_count,
+                    pd.product_image,
                     pd.about,
                     pd.video_url,
                     pd.total_duration,
@@ -352,6 +353,7 @@ class DBOperations:
                 return jsonify({"response": {"msg": "No sessions found for the given product ID", "records": [], "status": True}})
 
             product_details = {
+                "product_image":category_details[0][column_names.index("product_image")],
                 "about": category_details[0][column_names.index("about")],
                 "product_id": category_details[0][column_names.index("product_id")],
                 "product_name": category_details[0][column_names.index("product_name")],
@@ -422,8 +424,7 @@ class DBOperations:
 
                 cur.close()
                 db_connect.close()
-
-                return jsonify({"message": "New level added successfully."}), 200
+                return jsonify({"message": "New level added successfully.","level_id":level_id,"session_id":session_id}), 200
         except Exception as e:
             print(f"Error create_session_level: {e}")
             return jsonify({"message": "Failed to add level."}), 500
@@ -505,10 +506,36 @@ class DBOperations:
                 cur.close()
                 db_connect.close()
 
-                return jsonify({"message": "Order successfully."}), 200
+                return jsonify(
+                    {
+                        "response": {
+                            "msg": "Order successfull",
+                            "status":"True",
+                            "records": [
+                                {
+                                    "order_id":purchase_id,
+                                    "product_id":product_id,
+                                    "status":True,
+                                }
+                            ]
+                        }
+                    }
+                ), 200
         except Exception as e:
             print(f"Errorproduct_purchase: {e}")
-            return jsonify({"message": "Failed to Order."}), 500
+            return jsonify(
+                 {
+                        "response": {
+                            "msg": "Order failed",
+                            "status":"False",
+                            "records": [
+                                {
+                                    "status":False,
+                                }
+                            ]
+                        }
+                    }
+            ), 500
         
     def get_purchase_details(self,username):
         try:
@@ -669,3 +696,113 @@ class DBOperations:
         except Exception as e:
             print(f"Error retrieving user details from the database: {e}")
             return jsonify({"error": f"Error retrieving user details from the database: {e}"})
+        
+    def mark_session_completed(self,session_id,product_id,username):
+        try:
+            db_connect = self.create_connection()
+            if db_connect:
+                cur = db_connect.cursor()
+
+                query = """
+                    INSERT INTO session_progress (session_id, product_id, username, date_of_completion, status)
+                    VALUES (%s, %s, %s, %s, %s);
+                """
+
+                modified_date_time = self.get_current_date_time()
+                print("Modified Date Time ", modified_date_time)
+
+                data = (session_id, product_id, username, modified_date_time,True)
+
+                cur.execute(query, data)
+                db_connect.commit()
+
+                cur.close()
+                db_connect.close()
+
+                return jsonify({"message": "Session marked completed."}), 200
+        except Exception as e:
+            print(f"Error mark completed: {e}")
+            return jsonify({"message": "Failed mark completed."}), 500
+        
+    def mark_level_completed(self, session_id, product_id, username, level_id):
+        try:
+            db_connect = self.create_connection()
+            if db_connect:
+                cur = db_connect.cursor()
+
+                query = """
+                    INSERT INTO level_progress (level_id, session_id, username, date_of_completion, status, product_id)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """
+
+                modified_date_time = self.get_current_date_time()
+                print("Modified Date Time", modified_date_time)
+
+                data = (level_id, session_id, username, modified_date_time, True, product_id)
+
+                cur.execute(query, data)
+                db_connect.commit()
+
+                cur.close()
+                db_connect.close()
+
+                return jsonify({"message": "Level marked completed."}), 200
+        except Exception as e:
+            print(f"Error mark_level_completed: {e}")
+            return jsonify({"message": "Failed to mark completed."}), 500
+        
+    def get_level_record(self,username,product_id):
+        try:
+            query = f'''
+                SELECT * FROM level_progress WHERE username = '{username}' AND product_id = '{product_id}'
+            '''
+            conn = self.create_connection()
+            if conn:
+                cur = conn.cursor()
+                cur.execute(query)
+                banner_details = cur.fetchall()
+                cur.close()
+                conn.close()
+                column_names = [desc[0] for desc in cur.description]
+                banner_list = {
+                    "response": {
+                        "msg": "We have successfully fetched level record",
+                        "records": [
+                            {column_names[i]: row[i] for i in range(len(row))} for row in banner_details
+                        ],
+                        "status": True,
+                    }
+                }
+
+                return jsonify(banner_list)
+        except Exception as e:
+            print(f"Error retrieving level record from the database: {e}")
+            return jsonify({"error": f"Error retrieving level record from the database: {e}"})
+    
+    def get_session_record(self,username,product_id):
+        try:
+            query = f'''
+                SELECT * FROM session_progress WHERE username = '{username}' AND product_id = '{product_id}'
+            '''
+            conn = self.create_connection()
+            if conn:
+                cur = conn.cursor()
+                cur.execute(query)
+                banner_details = cur.fetchall()
+                cur.close()
+                conn.close()
+                column_names = [desc[0] for desc in cur.description]
+                banner_list = {
+                    "response": {
+                        "msg": "We have successfully fetched session record",
+                        "records": [
+                            {column_names[i]: row[i] for i in range(len(row))} for row in banner_details
+                        ],
+                        "status": True,
+                    }
+                }
+
+                return jsonify(banner_list)
+        except Exception as e:
+            print(f"Error retrieving session record from the database: {e}")
+            return jsonify({"error": f"Error retrieving session record from the database: {e}"})

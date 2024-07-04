@@ -86,6 +86,7 @@ flutter:
     - assets/icons/course_icons/
     - assets/icons/profiles/
     - assets/icons/inbox/
+    - assets/images/message/
     
 
   # An image asset can refer to one or more resolution-specific "variants", see
