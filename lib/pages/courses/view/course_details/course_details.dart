@@ -1,5 +1,7 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:e_learn/pages/components/cards/session_cards.dart';
 import 'package:e_learn/pages/courses/controller/courses_controller.dart';
+import 'package:e_learn/pages/payment/view/payment.dart';
 import 'package:e_learn/services/helper/controller/helper_controller.dart';
 import 'package:e_learn/utils/theme/colors.dart';
 import 'package:e_learn/utils/theme/fonts.dart';
@@ -10,10 +12,13 @@ import 'package:iconsax/iconsax.dart';
 
 // ignore: must_be_immutable
 class CourseDetails extends StatelessWidget {
-  CourseDetails({super.key});
+  bool isPurchased;
+
+  CourseDetails({super.key, required this.isPurchased});
   CoursesController coursesController = Get.find();
   HelperController helperController = Get.find();
   Warppers warppers = Warppers();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,27 +30,28 @@ class CourseDetails extends StatelessWidget {
             );
           } else {
             helperController.videoPlayer(
-                coursesController.courseDetails[0].productDetails.videoUrl);
+                coursesController.courseDetails[0].productDetails.videoUrl,
+                true);
             return SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Stack(
+                  Row(
                     children: [
-                      videoPlayer(context),
-                      Positioned(
-                        top: 16,
-                        left: 16,
-                        child: IconButton(
-                          onPressed: () {
-                            Get.back();
-                          },
-                          icon: Image.asset('assets/icons/back_arrow_ic.png'),
-                          color: Colors.white,
-                        ),
+                      IconButton(
+                        onPressed: () {
+                          Get.back();
+                        },
+                        icon: Image.asset('assets/icons/back_arrow_ic.png'),
+                        color: Colors.white,
+                      ),
+                      Text(
+                        'Courses Details',
+                        style: headingFontStyle.copyWith(fontSize: 21),
                       ),
                     ],
                   ),
+                  videoPlayer(context),
                   const SizedBox(height: 10),
                   Padding(
                     padding:
@@ -72,21 +78,36 @@ class CourseDetails extends StatelessWidget {
       floatingActionButton: Obx(() {
         return coursesController.isLoading.value
             ? const SizedBox()
-            : SizedBox(
-                width: MediaQuery.of(context).size.width * 0.8,
-                child: FloatingActionButton.extended(
-                  onPressed: () {},
-                  label: Text(
-                    'Enroll Course - ₹${coursesController.courseDetails[0].productDetails.price}',
-                    style: headingFontStyle.copyWith(
-                        fontSize: 18, color: Colors.white),
-                  ),
-                  backgroundColor: primaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30.0),
-                  ),
-                ),
-              );
+            : isPurchased
+                ? const SizedBox()
+                : SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.8,
+                    child: FloatingActionButton.extended(
+                      onPressed: () {
+                        Get.to(PaymentPage(
+                          price: coursesController
+                              .courseDetails[0].productDetails.price,
+                          productId: coursesController
+                              .courseDetails[0].productDetails.productId,
+                          name: coursesController
+                              .courseDetails[0].productDetails.productName,
+                          description: coursesController
+                              .courseDetails[0].productDetails.about,
+                          imageUrl: coursesController
+                              .courseDetails[0].productDetails.productImage,
+                        ));
+                      },
+                      label: Text(
+                        'Enroll Course - ₹${coursesController.courseDetails[0].productDetails.price}',
+                        style: headingFontStyle.copyWith(
+                            fontSize: 18, color: Colors.white),
+                      ),
+                      backgroundColor: primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30.0),
+                      ),
+                    ),
+                  );
       }),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
@@ -130,14 +151,21 @@ class CourseDetails extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      coursesController
-                          .courseDetails[0].productDetails.productName,
-                      style: headingFontStyle.copyWith(
-                        color: fontTitleColor,
-                        fontSize: 12,
+                    SizedBox(
+                      width: 300,
+                      child: AutoSizeText(
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        minFontSize: 12,
+                        coursesController
+                            .courseDetails[0].productDetails.productName,
+                        style: headingFontStyle.copyWith(
+                          color: fontTitleColor,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                     Row(
@@ -217,7 +245,7 @@ class CourseDetails extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   SizedBox(
-                      width: 185,
+                      width: 195,
                       height: 50,
                       child: Obx(() {
                         return ElevatedButton(
@@ -242,7 +270,7 @@ class CourseDetails extends StatelessWidget {
                         );
                       })),
                   SizedBox(
-                    width: 185,
+                    width: 195,
                     height: 50,
                     child: Obx(
                       () {
@@ -302,6 +330,7 @@ class CourseDetails extends StatelessWidget {
     return Column(
       children: [
         SessionCards(
+          isPurchased: isPurchased,
           indexCount: coursesController.courseDetails[0].sessions.length,
           listData: coursesController.courseDetails[0].sessions,
         )

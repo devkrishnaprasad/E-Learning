@@ -16,6 +16,7 @@ class NavigationController extends GetxController {
     helperController.getAllCourseCategoryList();
     helperController.getAllPopuplarCoursesList();
     helperController.getAllBannersList();
+    helperController.getPurchaseDetails();
   }
 
   final List<Widget> children = [

@@ -44,7 +44,6 @@ class ApiProvider {
   getSecure(apiUrl) async {
     var token = await localStorage.readUserToken();
     log("The Api Url : $BASEURL/$apiUrl");
-    log('User Token $token');
 
     var headers = {'Authorization': 'Bearer $token'};
     var dio = Dio();
@@ -54,6 +53,28 @@ class ApiProvider {
         method: 'GET',
         headers: headers,
       ),
+    );
+
+    if (response.statusCode == 200) {
+      return response.data['response']['records'];
+    } else {
+      log(response.statusMessage.toString());
+    }
+  }
+
+  postSecure(apiUrl, payload) async {
+    var token = await localStorage.readUserToken();
+    log("The Api Url : $BASEURL/$apiUrl");
+
+    var headers = {'Authorization': 'Bearer $token'};
+    var dio = Dio();
+    var response = await dio.request(
+      '$BASEURL/$apiUrl',
+      options: Options(
+        method: 'POST',
+        headers: headers,
+      ),
+      data: payload,
     );
 
     if (response.statusCode == 200) {

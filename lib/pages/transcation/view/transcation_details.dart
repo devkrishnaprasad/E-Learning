@@ -6,9 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class TranscationDetails extends StatefulWidget {
-  TranscationDetails({super.key});
+  const TranscationDetails({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _TranscationDetailsState createState() => _TranscationDetailsState();
 }
 

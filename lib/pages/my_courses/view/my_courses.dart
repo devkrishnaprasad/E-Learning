@@ -1,4 +1,5 @@
 import 'package:e_learn/pages/courses/controller/courses_controller.dart';
+import 'package:e_learn/pages/courses/view/popular_courses.dart';
 import 'package:e_learn/pages/filter/filters.dart';
 import 'package:e_learn/pages/my_courses/controller/my_course_controller.dart';
 import 'package:e_learn/pages/my_courses/view/course_session_page.dart';
@@ -12,9 +13,9 @@ import 'package:get/get.dart';
 // ignore: must_be_immutable
 class MyCourses extends StatelessWidget {
   MyCourses({super.key});
-  MyCourseController myCourseController = Get.put(MyCourseController());
   HelperController helperController = Get.find();
   CoursesController coursesController = Get.find();
+  MyCourseController myCourseController = Get.put(MyCourseController());
   RxBool isOnGoing = true.obs;
   @override
   Widget build(BuildContext context) {
@@ -24,7 +25,7 @@ class MyCourses extends StatelessWidget {
           padding: const EdgeInsets.all(20.0),
           child: Obx(
             () {
-              if (myCourseController.isLoading.value) {
+              if (helperController.isLoading.value) {
                 return const Center(
                   child: CircularProgressIndicator(),
                 );
@@ -35,7 +36,7 @@ class MyCourses extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            'Popular Courses',
+                            'My Courses',
                             style: headingFontStyle.copyWith(fontSize: 21),
                           ),
                         ],
@@ -45,11 +46,46 @@ class MyCourses extends StatelessWidget {
                       const SizedBox(height: 20),
                       toggleButton(context),
                       const SizedBox(height: 20),
-                      Obx(() {
-                        return isOnGoing.value
-                            ? onGoingCoursesWidget(context)
-                            : completedCoursesWidget(context);
-                      })
+                      helperController.purchaseDetails.isEmpty
+                          ? Column(
+                              children: [
+                                const SizedBox(height: 40),
+                                Image.asset(
+                                  'assets/images/message/empty_list.png',
+                                  width: 250,
+                                  height: 250,
+                                ),
+                                Text(
+                                  'You have not purchased any course.',
+                                  style:
+                                      headingFontStyle.copyWith(fontSize: 20),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 50),
+                                SizedBox(
+                                  height: 60,
+                                  width: 200,
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      Get.to(PopularCourses());
+                                    },
+                                    child: Text(
+                                      'Explor Course',
+                                      style: headingFontStyle.copyWith(
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              ],
+                            )
+                          : Obx(
+                              () {
+                                return isOnGoing.value
+                                    ? onGoingCoursesWidget(context)
+                                    : completedCoursesWidget(context);
+                              },
+                            )
                     ],
                   ),
                 );
@@ -137,12 +173,16 @@ class MyCourses extends StatelessWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemBuilder: (context, index) {
-            var data = myCourseController.purchaseDetails[index];
+            var data = helperController.purchaseDetails[index];
+
             return GestureDetector(
-              onTap: () {
-                coursesController.getCourseDetails(data.productId);
+              onTap: () async {
+                await coursesController.getCourseDetails(data.productId);
+                myCourseController.getLevelRecord(data.productId);
+                myCourseController.getSessionRecord(data.productId);
                 Get.to(CourseSessionPage(
-                  isComplected: false,
+                  courseName: data.productName,
+                  isComplected: true,
                 ));
               },
               child: MyCoursesCard(
@@ -159,7 +199,7 @@ class MyCourses extends StatelessWidget {
           separatorBuilder: (context, index) {
             return const SizedBox(height: 20);
           },
-          itemCount: myCourseController.purchaseDetails.length,
+          itemCount: helperController.purchaseDetails.length,
         )
       ],
     );
@@ -172,11 +212,14 @@ class MyCourses extends StatelessWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemBuilder: (context, index) {
-            var data = myCourseController.purchaseDetails[index];
+            var data = helperController.purchaseDetails[index];
             return GestureDetector(
-              onTap: () {
-                coursesController.getCourseDetails(data.productId);
+              onTap: () async {
+                await coursesController.getCourseDetails(data.productId);
+                myCourseController.getLevelRecord(data.productId);
+                myCourseController.getSessionRecord(data.productId);
                 Get.to(CourseSessionPage(
+                  courseName: data.productName,
                   isComplected: true,
                 ));
               },
@@ -194,7 +237,7 @@ class MyCourses extends StatelessWidget {
           separatorBuilder: (context, index) {
             return const SizedBox(height: 20);
           },
-          itemCount: myCourseController.purchaseDetails.length,
+          itemCount: helperController.purchaseDetails.length,
         )
       ],
     );
