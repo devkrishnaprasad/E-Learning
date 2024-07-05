@@ -806,3 +806,60 @@ class DBOperations:
         except Exception as e:
             print(f"Error retrieving session record from the database: {e}")
             return jsonify({"error": f"Error retrieving session record from the database: {e}"})
+        
+    def mark_course_completed(self,product_id, username,item_id):
+        try:
+            db_connect = self.create_connection()
+            if db_connect:
+                cur = db_connect.cursor()
+
+                query = """
+                    INSERT INTO completed_course_details (item_id, username, product_id, completion_date)
+                    VALUES (%s, %s, %s, %s)
+                """
+
+                modified_date_time = self.get_current_date_time()
+                print("Modified Date Time", modified_date_time)
+
+                data = (item_id, username, product_id, modified_date_time)
+
+                cur.execute(query, data)
+                db_connect.commit()
+
+                cur.close()
+                db_connect.close()
+
+                return jsonify({"message": "Course marked completed."}), 200
+        except Exception as e:
+            print(f"Error Course completed: {e}")
+            return jsonify({"message": "Failed to mark completed."}), 500
+        
+    def get_completed_courses(self,username):
+        try:
+            query = f'''
+                SELECT * FROM completed_course_details WHERE username = '{username}'
+            '''
+            conn = self.create_connection()
+            if conn:
+                cur = conn.cursor()
+                cur.execute(query)
+                banner_details = cur.fetchall()
+                cur.close()
+                conn.close()
+                column_names = [desc[0] for desc in cur.description]
+                banner_list = {
+                    "response": {
+                        "msg": "We have successfully fetched completed courses",
+                        "records": [
+                            {column_names[i]: row[i] for i in range(len(row))} for row in banner_details
+                        ],
+                        "status": True,
+                    }
+                }
+
+                return jsonify(banner_list)
+        except Exception as e:
+            print(f"Error retrieving completed courses from the database: {e}")
+            return jsonify({"error": f"Error retrieving completed courses from the database: {e}"})
+  
+    

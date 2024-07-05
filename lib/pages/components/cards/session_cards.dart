@@ -65,7 +65,8 @@ class SessionCards extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemBuilder: (context, levelIndex) {
-                return levelWidget(levelIndex, listData[index].levels, index);
+                return levelWidget(levelIndex, listData[index].levels, index,
+                    listData[index].sessionId);
               },
               separatorBuilder: (context, levelIndex) {
                 return const Column(
@@ -94,8 +95,11 @@ class SessionCards extends StatelessWidget {
     );
   }
 
-  Widget levelWidget(levelIndex, listData, index) {
+  Widget levelWidget(levelIndex, listData, index, sessionId) {
     RxBool isComplected = false.obs;
+
+    RxBool isPurchasedCourse = false.obs;
+    isPurchasedCourse.value = isPurchased;
     if (isPurchased) {
       MyCourseController myCourseController = Get.find();
       isComplected.value = myCourseController.levelRecord
@@ -103,7 +107,13 @@ class SessionCards extends StatelessWidget {
     }
     return GestureDetector(
       onTap: () {
-        log("The level ${listData[levelIndex].levelId}");
+        if (isPurchased) {
+          MyCourseController myCourseController = Get.find();
+          log('Current level id : ${myCourseController.currentLevelId.value}');
+          log("The level id ${listData[levelIndex].levelId}");
+          log("The session id $sessionId");
+          log("Current session id ${myCourseController.currentSessionId.value}");
+        }
       },
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -117,7 +127,7 @@ class SessionCards extends StatelessWidget {
                     height: 50,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isPurchased
+                      color: isPurchasedCourse.value
                           ? isComplected.value
                               ? Colors.green
                               : secondaryColor
@@ -128,7 +138,7 @@ class SessionCards extends StatelessWidget {
                         "${levelIndex + 1}",
                         style: headingFontStyle.copyWith(
                           fontSize: 14,
-                          color: isPurchased
+                          color: isPurchasedCourse.value
                               ? isComplected.value
                                   ? Colors.white
                                   : Colors.black
@@ -165,13 +175,14 @@ class SessionCards extends StatelessWidget {
           ),
           IconButton(
             onPressed: () {
-              // MyCourseController myCourseController = Get.find();
-              // myCourseController.currentLevelId.value =
-              //     listData[levelIndex].levelId;
-              // myCourseController.currentSessionId.value =
-              //     myCourseController.sessionRecord[index].sessionId;
-              helperController.currentSessionVideoUrl.value =
-                  listData[levelIndex].videoPath;
+              if (isPurchased) {
+                MyCourseController myCourseController = Get.find();
+                myCourseController.currentLevelId.value =
+                    listData[levelIndex].levelId;
+                myCourseController.currentSessionId.value = sessionId;
+                helperController.currentSessionVideoUrl.value =
+                    listData[levelIndex].videoPath;
+              }
             },
             icon: isPurchased
                 ? Image.asset('assets/icons/play_ic.png')

@@ -15,7 +15,7 @@ class ApiProvider {
       ),
     );
     if (response.statusCode == 200) {
-      return response.data['response']['records'];
+      return response.data;
     } else {
       log(response.statusMessage.toString());
     }
@@ -35,7 +35,7 @@ class ApiProvider {
     );
 
     if (response.statusCode == 200) {
-      return response.data['response']['records'];
+      return response.data;
     } else {
       log(response.statusMessage.toString());
     }
@@ -56,7 +56,7 @@ class ApiProvider {
     );
 
     if (response.statusCode == 200) {
-      return response.data['response']['records'];
+      return response.data;
     } else {
       log(response.statusMessage.toString());
     }
@@ -78,7 +78,7 @@ class ApiProvider {
     );
 
     if (response.statusCode == 200) {
-      return response.data['response']['records'];
+      return response.data;
     } else {
       log(response.statusMessage.toString());
     }

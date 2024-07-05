@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:e_learn/pages/main/navigation_page.dart';
+import 'package:e_learn/pages/my_courses/model/completed_course_model.dart';
 import 'package:e_learn/pages/my_courses/model/purchase_model.dart';
 import 'package:e_learn/pages/signin_sigin_up/signin_page.dart';
 import 'package:e_learn/services/api/api_provider.dart';
@@ -16,7 +17,7 @@ class HelperApiService {
 
     try {
       var response = await apiProvider.getRequest(allCoursesApiEndpoint);
-      allCourses = response
+      allCourses = response['response']['records']
           .map<CoursListRecord>((p) => CoursListRecord.fromJson(p))
           .toList();
 
@@ -35,7 +36,7 @@ class HelperApiService {
 
     try {
       var response = await apiProvider.getRequest(allPopularCoursesApiEndpoint);
-      allPopuplarCourses = response
+      allPopuplarCourses = response['response']['records']
           .map<PopularCoursesListRecord>(
               (p) => PopularCoursesListRecord.fromJson(p))
           .toList();
@@ -55,7 +56,7 @@ class HelperApiService {
 
     try {
       var response = await apiProvider.getRequest(allCategoryApiEndpoint);
-      categoryList = response
+      categoryList = response['response']['records']
           .map<CategoryListRecord>((p) => CategoryListRecord.fromJson(p))
           .toList();
 
@@ -74,7 +75,7 @@ class HelperApiService {
 
     try {
       var response = await apiProvider.getRequest(allBannersApiEndpoint);
-      bannerList = response
+      bannerList = response['response']['records']
           .map<BannerListRecord>((p) => BannerListRecord.fromJson(p))
           .toList();
 
@@ -105,7 +106,7 @@ class HelperApiService {
 
     try {
       var response = await apiProvider.postRequest(userSiginEndpoint, payload);
-      allCourses = response
+      allCourses = response['response']['records']
           .map<UserDetailsRecord>((p) => UserDetailsRecord.fromJson(p))
           .toList();
 
@@ -127,7 +128,7 @@ class HelperApiService {
     List<PurchaseRecord> purchaseList = [];
     try {
       var response = await apiProvider.getSecure(getPurchaseDetailsEndpoint);
-      purchaseList = response
+      purchaseList = response['response']['records']
           .map<PurchaseRecord>((p) => PurchaseRecord.fromJson(p))
           .toList();
 
@@ -136,6 +137,24 @@ class HelperApiService {
       }
     } catch (e) {
       log("Error while getPurchaseDetails : $e");
+      return [];
+    }
+    return [];
+  }
+
+  Future<List<CompletedCourseRecord>> getCompletedCurseDetails() async {
+    List<CompletedCourseRecord> completedList = [];
+    try {
+      var response = await apiProvider.getSecure(getCompletedCourseEndpoint);
+      completedList = response['response']['records']
+          .map<CompletedCourseRecord>((p) => CompletedCourseRecord.fromJson(p))
+          .toList();
+
+      if (response.isNotEmpty) {
+        return completedList;
+      }
+    } catch (e) {
+      log("Error while getCompletedCurseDetails : $e");
       return [];
     }
     return [];

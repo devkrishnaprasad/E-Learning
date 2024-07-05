@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:e_learn/services/helper/controller/helper_controller.dart';
 import 'package:e_learn/utils/theme/colors.dart';
 import 'package:e_learn/utils/theme/fonts.dart';
 import 'package:flutter/material.dart';
@@ -6,14 +8,22 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+// ignore: depend_on_referenced_packages
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_share/flutter_share.dart';
 
 // ignore: must_be_immutable
 class CertificatePage extends StatelessWidget {
-  CertificatePage({super.key});
-  var containerHeigh = 0.0;
+  final String username;
+  final String courseName;
 
+  CertificatePage({
+    super.key,
+    required this.username,
+    required this.courseName,
+  });
+  var containerHeigh = 0.0;
+  HelperController helperController = Get.find();
   @override
   Widget build(BuildContext context) {
     containerHeigh = MediaQuery.of(context).size.height * 0.7;
@@ -104,7 +114,7 @@ class CertificatePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 15),
                 Text(
-                  'KrishnaPrasad R',
+                  username,
                   style: headingTagFontStyle.copyWith(
                       fontSize: 20, fontWeight: FontWeight.w900),
                 ),
@@ -118,14 +128,19 @@ class CertificatePage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 15),
-                Text(
-                  '3D Design Illustration Course',
-                  style: headingTagFontStyle.copyWith(
-                      fontSize: 16, fontWeight: FontWeight.w900),
+                Padding(
+                  padding: const EdgeInsets.only(left: 10, right: 10),
+                  child: AutoSizeText(
+                    maxLines: 4,
+                    courseName,
+                    style: headingTagFontStyle.copyWith(
+                        fontSize: 16, fontWeight: FontWeight.w900),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
                 const SizedBox(height: 15),
                 Text(
-                  'Issued on November 24, 2022',
+                  'Issued on ${helperController.completedCourseDetails[0].completionDate}',
                   style: headingTagFontStyle.copyWith(fontSize: 13),
                 ),
                 const SizedBox(height: 15),

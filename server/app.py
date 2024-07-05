@@ -391,7 +391,28 @@ def get_session_record():
             data = request.get_json()
             product_id =  data.get('product_id')
             return operations_obj.get_session_record(username=response['details']['email'],product_id=product_id)
-        
 
+@app.route('/apis/product/mark-completed/', methods=['POST'])
+def mark_course_completed():
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        token = auth_header.split(" ")[1]
+        response =  validate_token(token)
+        if response['status'] == True:
+            response['details']['email']
+            data = request.get_json()
+            product_id =  data.get('product_id')
+            return operations_obj.mark_course_completed(username=response['details']['email'],product_id=product_id,item_id=generate_uuid())
+
+@app.route('/apis/product/get-completed-courses/', methods=['GET'])
+def get_completed_courses():
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        token = auth_header.split(" ")[1]
+        
+        response =  validate_token(token)
+        if response['status'] == True:
+            response['details']['email']
+            return operations_obj.get_completed_courses(username=response['details']['email'])
 if __name__ == '__main__':
     app.run(debug=True, port=4000)

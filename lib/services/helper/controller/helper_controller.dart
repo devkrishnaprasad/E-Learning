@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'package:chewie/chewie.dart';
 import 'package:e_learn/pages/my_courses/controller/my_course_controller.dart';
+import 'package:e_learn/pages/my_courses/model/completed_course_model.dart';
 import 'package:e_learn/pages/my_courses/model/purchase_model.dart';
 import 'package:e_learn/services/helper/controller/api/helper_api.dart';
 import 'package:e_learn/services/helper/local_storage/local_storage.dart';
@@ -18,6 +19,7 @@ class HelperController extends GetxController {
   var allBannerList = <BannerListRecord>[].obs;
   var userDetails = <UserDetailsRecord>[].obs;
   var purchaseDetails = <PurchaseRecord>[].obs;
+  var completedCourseDetails = <CompletedCourseRecord>[].obs;
   RxString currentSessionVideoUrl = ''.obs;
   RxBool isVideoLoading = false.obs;
   RxBool isLoading = false.obs;
@@ -145,21 +147,17 @@ class HelperController extends GetxController {
     if (videoPlayerController!.value.isInitialized) {
       final duration = videoPlayerController!.value.duration;
       final position = videoPlayerController!.value.position;
-      var status = myCourseController.checkSessionIsCompleted();
-      if (status) {
-      } else {
-        if (position.inSeconds >= (0.9 * duration.inSeconds).round() &&
-            !hasCalledApi) {
-          hasCalledApi = true;
-          await myCourseController.markLevelCompleted();
 
-          await myCourseController.getLevelRecord(myCourseController
-              .coursesController.courseDetails[0].productDetails.productId);
+      if (position.inSeconds >= (0.9 * duration.inSeconds).round() &&
+          !hasCalledApi) {
+        hasCalledApi = true;
+        await myCourseController.markLevelCompleted();
 
-          await myCourseController.getSessionRecord(myCourseController
-              .coursesController.courseDetails[0].productDetails.productId);
-        }
-        myCourseController.checkSessionIsCompleted();
+        await myCourseController.getLevelRecord(myCourseController
+            .coursesController.courseDetails[0].productDetails.productId);
+
+        await myCourseController.getSessionRecord(myCourseController
+            .coursesController.courseDetails[0].productDetails.productId);
       }
 
       if (videoPlayerController!.value.isPlaying &&
@@ -167,11 +165,6 @@ class HelperController extends GetxController {
         await callAnotherFunctionWhenCompleted();
       }
     }
-  }
-
-  Future<void> callApiWhenNinetyPercentPlayed() async {
-    // Your API call logic
-    log("90% of the video has been played. Calling the API...");
   }
 
   Future<void> callAnotherFunctionWhenCompleted() async {
@@ -224,6 +217,22 @@ class HelperController extends GetxController {
       }
     } catch (e) {
       log("Error while getPurchaseDetails list $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  getCompletedCourseDetails() async {
+    isLoading.value = true;
+    try {
+      var response = await helperApiService.getCompletedCurseDetails();
+      if (response.isNotEmpty) {
+        completedCourseDetails.assignAll(response);
+      } else {
+        purchaseDetails.assignAll([]);
+      }
+    } catch (e) {
+      log("Error while getCompletedCourseDetails list $e");
     } finally {
       isLoading.value = false;
     }

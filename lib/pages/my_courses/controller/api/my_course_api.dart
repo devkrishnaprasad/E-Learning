@@ -11,8 +11,9 @@ class MyCourseApi {
     try {
       var response =
           await apiProvider.postSecure(getLevelRecordEndpoint, payload);
-      levelRecord =
-          response.map<LevelRecord>((p) => LevelRecord.fromJson(p)).toList();
+      levelRecord = response['response']['records']
+          .map<LevelRecord>((p) => LevelRecord.fromJson(p))
+          .toList();
 
       if (response.isNotEmpty) {
         return levelRecord;
@@ -29,7 +30,7 @@ class MyCourseApi {
     try {
       var response =
           await apiProvider.postSecure(getSessionRecordEndpoint, payload);
-      levelRecord = response
+      levelRecord = response['response']['records']
           .map<SessionRecord>((p) => SessionRecord.fromJson(p))
           .toList();
 
@@ -60,6 +61,16 @@ class MyCourseApi {
       log("Api response level mark $response");
     } catch (e) {
       log("Error marking level completed $e");
+    }
+  }
+
+  markCourseompleted(payload) async {
+    try {
+      var response =
+          await apiProvider.postSecure(markCourseCompletedEndpoint, payload);
+      log("Api response course mark $response");
+    } catch (e) {
+      log("Error marking course completed $e");
     }
   }
 }

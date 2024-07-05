@@ -178,8 +178,8 @@ class MyCourses extends StatelessWidget {
             return GestureDetector(
               onTap: () async {
                 await coursesController.getCourseDetails(data.productId);
-                myCourseController.getLevelRecord(data.productId);
-                myCourseController.getSessionRecord(data.productId);
+                await myCourseController.getLevelRecord(data.productId);
+                await myCourseController.getSessionRecord(data.productId);
                 Get.to(CourseSessionPage(
                   courseName: data.productName,
                   isComplected: true,
@@ -192,7 +192,8 @@ class MyCourses extends StatelessWidget {
                 courseDescription: data.about,
                 rating: data.rating,
                 duration: data.totalDuration,
-                isCompleted: false,
+                isCompleted: helperController.completedCourseDetails
+                    .any((element) => element.productId == data.productId),
               ),
             );
           },
@@ -200,23 +201,31 @@ class MyCourses extends StatelessWidget {
             return const SizedBox(height: 20);
           },
           itemCount: helperController.purchaseDetails.length,
-        )
+        ),
       ],
     );
   }
 
   Widget completedCoursesWidget(context) {
+    final completedProductIds = helperController.completedCourseDetails
+        .map((course) => course.productId)
+        .toSet();
+
+    final completedPurchaseDetails = helperController.purchaseDetails
+        .where((purchase) => completedProductIds.contains(purchase.productId))
+        .toList();
+
     return Column(
       children: [
         ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemBuilder: (context, index) {
-            var data = helperController.purchaseDetails[index];
+            var data = completedPurchaseDetails[index];
             return GestureDetector(
               onTap: () async {
                 await coursesController.getCourseDetails(data.productId);
-                myCourseController.getLevelRecord(data.productId);
+                await myCourseController.getLevelRecord(data.productId);
                 myCourseController.getSessionRecord(data.productId);
                 Get.to(CourseSessionPage(
                   courseName: data.productName,
@@ -237,7 +246,7 @@ class MyCourses extends StatelessWidget {
           separatorBuilder: (context, index) {
             return const SizedBox(height: 20);
           },
-          itemCount: helperController.purchaseDetails.length,
+          itemCount: completedPurchaseDetails.length,
         )
       ],
     );
