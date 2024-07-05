@@ -1,5 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:e_learn/pages/certificate/certificate.dart';
+import 'package:e_learn/services/helper/controller/helper_controller.dart';
 import 'package:e_learn/utils/theme/colors.dart';
 import 'package:e_learn/utils/theme/fonts.dart';
 import 'package:flutter/material.dart';
@@ -141,7 +142,11 @@ class MyCoursesCard extends StatelessWidget {
                             padding: const EdgeInsets.only(right: 10.0),
                             child: GestureDetector(
                               onTap: () {
-                                Get.to(CertificatePage());
+                                HelperController helperController = Get.find();
+                                Get.to(CertificatePage(
+                                  username: helperController.userFullName.value,
+                                  courseName: courseTitle,
+                                ));
                               },
                               child: Text(
                                 'VIEW CERTIFICATE',

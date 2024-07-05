@@ -15,7 +15,7 @@ class CoursesApiService {
       var payload = {"product_id": productId};
       var response =
           await apiProvider.postRequest(getSessionApiEndpoint, payload);
-      courseDatils = response
+      courseDatils = response['response']['records']
           .map<SessionDetailsRecord>((p) => SessionDetailsRecord.fromJson(p))
           .toList();
 
@@ -36,7 +36,7 @@ class CoursesApiService {
       var payload = {"product_id": productId};
       var response =
           await apiProvider.postRequest(getProductReviewEndpoint, payload);
-      reviewDetails = response
+      reviewDetails = response['response']['records']
           .map<ProdcutReviewRecord>((p) => ProdcutReviewRecord.fromJson(p))
           .toList();
 
@@ -44,7 +44,7 @@ class CoursesApiService {
         return reviewDetails;
       }
     } catch (e) {
-      log("Error while getCourseDetails : $e");
+      log("Error while getProductReview : $e");
       return [];
     }
     return [];

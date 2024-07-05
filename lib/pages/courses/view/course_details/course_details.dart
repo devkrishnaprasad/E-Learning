@@ -28,6 +28,35 @@ class CourseDetails extends StatelessWidget {
             return const Center(
               child: CircularProgressIndicator(),
             );
+          }
+
+          if (coursesController.courseDetails.isEmpty) {
+            return Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          Get.back();
+                        },
+                        icon: Image.asset('assets/icons/back_arrow_ic.png'),
+                        color: Colors.white,
+                      ),
+                      Text(
+                        'Courses Details',
+                        style: headingFontStyle.copyWith(fontSize: 21),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 40),
+                  const Center(
+                    child: Text('Courses Details Not Avilable'),
+                  )
+                ],
+              ),
+            );
           } else {
             helperController.videoPlayer(
                 coursesController.courseDetails[0].productDetails.videoUrl,
@@ -75,40 +104,44 @@ class CourseDetails extends StatelessWidget {
           }
         }),
       ),
-      floatingActionButton: Obx(() {
-        return coursesController.isLoading.value
-            ? const SizedBox()
-            : isPurchased
-                ? const SizedBox()
-                : SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.8,
-                    child: FloatingActionButton.extended(
-                      onPressed: () {
-                        Get.to(PaymentPage(
-                          price: coursesController
-                              .courseDetails[0].productDetails.price,
-                          productId: coursesController
-                              .courseDetails[0].productDetails.productId,
-                          name: coursesController
-                              .courseDetails[0].productDetails.productName,
-                          description: coursesController
-                              .courseDetails[0].productDetails.about,
-                          imageUrl: coursesController
-                              .courseDetails[0].productDetails.productImage,
-                        ));
-                      },
-                      label: Text(
-                        'Enroll Course - ₹${coursesController.courseDetails[0].productDetails.price}',
-                        style: headingFontStyle.copyWith(
-                            fontSize: 18, color: Colors.white),
-                      ),
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30.0),
-                      ),
-                    ),
-                  );
-      }),
+      floatingActionButton: Obx(
+        () {
+          return !coursesController.isLoading.value
+              ? coursesController.courseDetails.isEmpty
+                  ? const SizedBox()
+                  : isPurchased
+                      ? const SizedBox()
+                      : SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.8,
+                          child: FloatingActionButton.extended(
+                            onPressed: () {
+                              Get.to(PaymentPage(
+                                price: coursesController
+                                    .courseDetails[0].productDetails.price,
+                                productId: coursesController
+                                    .courseDetails[0].productDetails.productId,
+                                name: coursesController.courseDetails[0]
+                                    .productDetails.productName,
+                                description: coursesController
+                                    .courseDetails[0].productDetails.about,
+                                imageUrl: coursesController.courseDetails[0]
+                                    .productDetails.productImage,
+                              ));
+                            },
+                            label: Text(
+                              'Enroll Course - ₹${coursesController.courseDetails[0].productDetails.price}',
+                              style: headingFontStyle.copyWith(
+                                  fontSize: 18, color: Colors.white),
+                            ),
+                            backgroundColor: primaryColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30.0),
+                            ),
+                          ),
+                        )
+              : const SizedBox();
+        },
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }

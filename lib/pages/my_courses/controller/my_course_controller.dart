@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:e_learn/pages/certificate/certificate.dart';
 import 'package:e_learn/pages/courses/controller/courses_controller.dart';
 import 'package:e_learn/pages/my_courses/controller/api/my_course_api.dart';
 import 'package:e_learn/pages/my_courses/model/level_record.dart';
@@ -16,7 +17,6 @@ class MyCourseController extends GetxController {
   HelperController helperController = Get.find();
   RxString currentSessionId = ''.obs;
   RxString currentLevelId = ''.obs;
-  RxBool isLastLevel = false.obs;
 
   getLevelRecord(productId) async {
     try {
@@ -24,41 +24,7 @@ class MyCourseController extends GetxController {
       var response = await myCourseApi.getLevelRecord(payload);
       if (response.isNotEmpty) {
         levelRecord.assignAll(response);
-
-        bool levelFound = false;
-
-        for (int j = 0;
-            j < coursesController.courseDetails[0].sessions.length;
-            j++) {
-          for (int i = 0;
-              i < coursesController.courseDetails[0].sessions[j].levels.length;
-              i++) {
-            bool isPresent = levelRecord.any((course) =>
-                course.levelId ==
-                coursesController
-                    .courseDetails[0].sessions[j].levels[i].levelId);
-            if (!isPresent) {
-              currentLevelId.value = coursesController
-                  .courseDetails[0].sessions[j].levels[i].levelId;
-              helperController.currentSessionVideoUrl.value = coursesController
-                  .courseDetails[0].sessions[j].levels[i].videoPath;
-              levelFound = true;
-              if (coursesController
-                      .courseDetails[0].sessions[j].levels.length ==
-                  i + 1) {
-                isLastLevel.value = true;
-              } else {
-                isLastLevel.value = false;
-              }
-              break;
-            }
-          }
-          if (levelFound) {
-            break;
-          }
-          checkSessionIsCompleted();
-        }
-        print("The bool value ${isLastLevel.value}");
+        getCurrentLevel();
       } else {
         levelRecord.assignAll([]);
         currentLevelId.value =
@@ -75,20 +41,7 @@ class MyCourseController extends GetxController {
       var response = await myCourseApi.getSessionRecord(payload);
       if (response.isNotEmpty) {
         sessionRecord.assignAll(response);
-
-        for (int i = 0;
-            i < coursesController.courseDetails[0].sessions.length;
-            i++) {
-          bool isPresent = sessionRecord.any((course) =>
-              course.sessionId ==
-              coursesController.courseDetails[0].sessions[i].sessionId);
-
-          if (!isPresent) {
-            currentSessionId.value =
-                coursesController.courseDetails[0].sessions[i].sessionId;
-            break;
-          }
-        }
+        getCurrentSession();
       } else {
         levelRecord.assignAll([]);
         currentSessionId.value =
@@ -100,51 +53,142 @@ class MyCourseController extends GetxController {
   }
 
   markSessionCompleted() async {
-    try {
-      var payload = {
-        "product_id":
-            coursesController.courseDetails[0].productDetails.productId,
-        "session_id": currentSessionId.value
-      };
-      await myCourseApi.markSessionCompleted(payload);
-    } catch (e) {
-      log("Error markSessionCompleted $e");
+    var status = sessionRecord
+        .any((element) => element.sessionId == currentSessionId.value);
+    if (!status) {
+      try {
+        var payload = {
+          "product_id":
+              coursesController.courseDetails[0].productDetails.productId,
+          "session_id": currentSessionId.value
+        };
+        await myCourseApi.markSessionCompleted(payload);
+        await markCourseCompleted();
+      } catch (e) {
+        log("Error markSessionCompleted $e");
+      }
+    } else {
+      log('Session alredy completed');
     }
   }
 
   markLevelCompleted() async {
     try {
-      var payload = {
-        "product_id":
-            coursesController.courseDetails[0].productDetails.productId,
-        "session_id": currentSessionId.value,
-        "level_id": currentLevelId.value
-      };
-      log(payload.toString());
-      await myCourseApi.markLevelompleted(payload);
+      var status =
+          levelRecord.any((element) => element.levelId == currentLevelId.value);
+      if (!status) {
+        var payload = {
+          "product_id":
+              coursesController.courseDetails[0].productDetails.productId,
+          "session_id": currentSessionId.value,
+          "level_id": currentLevelId.value
+        };
+        await myCourseApi.markLevelompleted(payload);
+      } else {
+        log('Level is alredy completed');
+      }
     } catch (e) {
       log("Error markLevelCompleted $e");
     }
   }
 
-  checkSessionIsCompleted() {
-    print("Current session ${currentSessionId.value}");
-    int index = coursesController.courseDetails[0].sessions
-        .indexWhere((session) => session.sessionId == currentSessionId.value);
+  markCourseCompleted() async {
+    var isCompleted = helperController.completedCourseDetails.any((element) =>
+        element.productId ==
+        coursesController.courseDetails[0].productDetails.productId);
+    bool isSessionCompleted = false;
+
+    for (int i = 0; i < sessionRecord.length; i++) {
+      isSessionCompleted = sessionRecord
+          .any((element) => element.sessionId == sessionRecord[i].sessionId);
+    }
+    if (!isCompleted && isSessionCompleted) {
+      try {
+        var payload = {
+          "product_id":
+              coursesController.courseDetails[0].productDetails.productId,
+        };
+        await myCourseApi.markCourseompleted(payload);
+        await helperController.getCompletedCourseDetails();
+
+        Get.to(CertificatePage(
+          courseName: helperController.userDetails[0].fullName,
+          username: helperController.userDetails[0].fullName,
+        ));
+      } catch (e) {
+        log("Error markCourseCompleted $e");
+      }
+    }
+  }
+
+  getCurrentLevel() {
+    bool levelFound = false;
+    for (int j = 0;
+        j < coursesController.courseDetails[0].sessions.length;
+        j++) {
+      for (int i = 0;
+          i < coursesController.courseDetails[0].sessions[j].levels.length;
+          i++) {
+        bool isPresent = levelRecord.any((course) =>
+            course.levelId ==
+            coursesController.courseDetails[0].sessions[j].levels[i].levelId);
+        if (!isPresent) {
+          currentLevelId.value =
+              coursesController.courseDetails[0].sessions[j].levels[i].levelId;
+          helperController.currentSessionVideoUrl.value = coursesController
+              .courseDetails[0].sessions[j].levels[i].videoPath;
+          levelFound = true;
+
+          break;
+        }
+      }
+      if (levelFound) {
+        break;
+      }
+    }
+
+    var status = checkAllLevelCompleted();
+    if (status) {
+      markSessionCompleted();
+    }
+  }
+
+  getCurrentSession() {
+    for (int i = 0;
+        i < coursesController.courseDetails[0].sessions.length;
+        i++) {
+      bool isPresent = sessionRecord.any((course) =>
+          course.sessionId ==
+          coursesController.courseDetails[0].sessions[i].sessionId);
+
+      if (!isPresent) {
+        currentSessionId.value =
+            coursesController.courseDetails[0].sessions[i].sessionId;
+        break;
+      }
+    }
+  }
+
+  checkAllLevelCompleted() {
+    var index = coursesController.courseDetails[0].sessions
+        .indexWhere((element) => element.sessionId == currentSessionId.value);
+
     if (index == -1) {
-      log('Session not found');
       return false;
     }
-    var levels = coursesController.courseDetails[0].sessions[index].levels;
-    bool allLevelsPresent = levels.every((level) =>
-        levelRecord.any((record) => record.levelId == level.levelId));
+    for (int i = 0;
+        i < coursesController.courseDetails[0].sessions[index].levels.length;
+        i++) {
+      var status = levelRecord.any((element) =>
+          element.levelId ==
+          coursesController.courseDetails[0].sessions[index].levels[i].levelId);
 
-    if (allLevelsPresent) {
-      log('All levels are present in the level record');
-      markLevelCompleted();
-    } else {
-      log('Not all levels are present in the level record');
+      if (!status) {
+        return false;
+      }
     }
-    return allLevelsPresent;
+    return true;
+
+    // 74cd343a-98b9-4b15-92ec-b825c8e44ce2
   }
 }
